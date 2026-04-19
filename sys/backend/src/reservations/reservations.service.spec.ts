@@ -145,4 +145,91 @@ describe('ReservationsService', () => {
       service.cancelReservation('reservation-unknown', 'demo-user'),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
+
+  it('lists reservations for admin filters', async () => {
+    const reservationsRepository = createRepositoryMock<ReservationEntity>();
+    const facilitiesRepository = createRepositoryMock<FacilityEntity>();
+    const equipmentsRepository = createRepositoryMock<EquipmentEntity>();
+    const service = new ReservationsService(
+      reservationsRepository,
+      facilitiesRepository,
+      equipmentsRepository,
+    );
+
+    reservationsRepository.find.mockResolvedValue([
+      {
+        id: 'reservation-001',
+        userId: 'demo-user',
+        facilityId: 'facility-001',
+        equipmentId: null,
+        facility: { name: 'Creative Studio A' },
+        equipment: null,
+        user: { name: 'Demo User' },
+        startAt: new Date('2026-04-20T10:00:00.000Z'),
+        endAt: new Date('2026-04-20T11:00:00.000Z'),
+        status: 'reserved',
+        note: null,
+        createdAt: new Date('2026-04-19T10:00:00.000Z'),
+        updatedAt: new Date('2026-04-19T10:00:00.000Z'),
+      },
+    ] as ReservationEntity[]);
+
+    const items = await service.listAdminReservations({
+      status: 'reserved',
+      facilityId: 'facility-001',
+    });
+
+    expect(items).toHaveLength(1);
+    expect(reservationsRepository.find).toHaveBeenCalled();
+  });
+
+  it('updates reservation status for admin operations', async () => {
+    const reservationsRepository = createRepositoryMock<ReservationEntity>();
+    const facilitiesRepository = createRepositoryMock<FacilityEntity>();
+    const equipmentsRepository = createRepositoryMock<EquipmentEntity>();
+    const service = new ReservationsService(
+      reservationsRepository,
+      facilitiesRepository,
+      equipmentsRepository,
+    );
+
+    reservationsRepository.findOne.mockResolvedValue({
+      id: 'reservation-001',
+      userId: 'demo-user',
+      facilityId: 'facility-001',
+      equipmentId: null,
+      facility: { name: 'Creative Studio A' },
+      equipment: null,
+      user: { name: 'Demo User' },
+      startAt: new Date('2026-04-20T10:00:00.000Z'),
+      endAt: new Date('2026-04-20T11:00:00.000Z'),
+      status: 'reserved',
+      note: 'Before',
+      createdAt: new Date('2026-04-19T10:00:00.000Z'),
+      updatedAt: new Date('2026-04-19T10:00:00.000Z'),
+    } as ReservationEntity);
+    reservationsRepository.save.mockResolvedValue({
+      id: 'reservation-001',
+      userId: 'demo-user',
+      facilityId: 'facility-001',
+      equipmentId: null,
+      facility: { name: 'Creative Studio A' },
+      equipment: null,
+      user: { name: 'Demo User' },
+      startAt: new Date('2026-04-20T10:00:00.000Z'),
+      endAt: new Date('2026-04-20T11:00:00.000Z'),
+      status: 'completed',
+      note: 'Admin updated',
+      createdAt: new Date('2026-04-19T10:00:00.000Z'),
+      updatedAt: new Date('2026-04-19T10:00:00.000Z'),
+    } as ReservationEntity);
+
+    const result = await service.updateReservationStatus('reservation-001', {
+      status: 'completed',
+      note: 'Admin updated',
+    });
+
+    expect(result.status).toBe('completed');
+    expect(result.note).toBe('Admin updated');
+  });
 });

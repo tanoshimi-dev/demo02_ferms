@@ -12,6 +12,7 @@
         <NuxtLink to="/facilities">Facilities</NuxtLink>
         <NuxtLink to="/equipments">Equipments</NuxtLink>
         <NuxtLink to="/reservations">Reservations</NuxtLink>
+        <NuxtLink v-if="isAdmin" to="/admin">Admin</NuxtLink>
         <a :href="backendPublicUrl" target="_blank" rel="noreferrer">Backend</a>
         <a v-if="authState.authenticated" :href="logoutUrl">Logout</a>
         <a v-else :href="handoverUrl">Login</a>
@@ -26,6 +27,9 @@ const { authState, handoverUrl, logoutUrl } = await useAuthSession();
 
 const appName = config.public.appName;
 const backendPublicUrl = config.public.backendPublicUrl;
+const isAdmin = computed(
+  () => authState.value.authenticated && authState.value.user.role === 'admin',
+);
 </script>
 
 <style scoped>

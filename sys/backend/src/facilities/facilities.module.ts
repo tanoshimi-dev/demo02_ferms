@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
+import { AdminFacilitiesController } from './admin-facilities.controller';
 import { EquipmentEntity } from '../equipments/equipment.entity';
 import { CatalogSeedService } from './catalog-seed.service';
 import { FacilitiesController } from './facilities.controller';
@@ -12,7 +13,7 @@ import { FacilitiesService } from './facilities.service';
     TypeOrmModule.forFeature([FacilityEntity, EquipmentEntity]),
     AuthModule,
   ],
-  controllers: [FacilitiesController],
+  controllers: [FacilitiesController, AdminFacilitiesController],
   providers: [FacilitiesService, CatalogSeedService],
   exports: [FacilitiesService],
 })

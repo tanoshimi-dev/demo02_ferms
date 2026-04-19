@@ -21,6 +21,19 @@ function extractCookie(setCookieHeader) {
   return setCookieHeader.split(';', 1)[0];
 }
 
+function createUniqueWindow(baseDayOffset) {
+  const seedMs = Date.now() % 86_400_000;
+  const startAt = new Date(
+    Date.UTC(2030, 0, 1 + baseDayOffset) + seedMs * 180,
+  );
+  const endAt = new Date(startAt.getTime() + 60 * 60 * 1000);
+
+  return {
+    startAt,
+    endAt,
+  };
+}
+
 async function createAuthenticatedSession() {
   const handoverResponse = await fetch(
     `${backendUrl}/api/auth/handover?returnTo=${encodeURIComponent(`${frontendUrl}/dashboard`)}`,
@@ -92,7 +105,7 @@ test('reservation scenario works through started services', async () => {
   });
   assert.equal(facilitiesResponse.status, 200);
   const facilitiesPayload = await facilitiesResponse.json();
-  const facility = facilitiesPayload.data.items[0];
+  const facility = facilitiesPayload.data.items.find((item) => item.isActive);
   assert.ok(facility);
 
   const facilityDetailResponse = await fetch(
@@ -105,12 +118,12 @@ test('reservation scenario works through started services', async () => {
   );
   assert.equal(facilityDetailResponse.status, 200);
   const facilityDetailPayload = await facilityDetailResponse.json();
-  const equipment = facilityDetailPayload.data.facility.equipments[0];
+  const equipment = facilityDetailPayload.data.facility.equipments.find(
+    (item) => item.isActive,
+  );
   assert.ok(equipment);
 
-  const startAt = new Date(Date.now() + 3 * 60 * 60 * 1000);
-  startAt.setMinutes(0, 0, 0);
-  const endAt = new Date(startAt.getTime() + 60 * 60 * 1000);
+  const { startAt, endAt } = createUniqueWindow(0);
 
   const availabilityBefore = await fetch(
     `${backendUrl}/api/reservations/availability?facilityId=${facility.id}&equipmentId=${equipment.id}&startAt=${encodeURIComponent(startAt.toISOString())}&endAt=${encodeURIComponent(endAt.toISOString())}`,
@@ -138,7 +151,7 @@ test('reservation scenario works through started services', async () => {
       note: 'Smoke reservation',
     }),
   });
-  assert.equal(createReservationResponse.status, 200);
+  assert.equal(createReservationResponse.status, 201);
   const createdReservationPayload = await createReservationResponse.json();
   const reservation = createdReservationPayload.data.reservation;
   assert.equal(reservation.status, 'reserved');
@@ -205,4 +218,182 @@ test('reservation scenario works through started services', async () => {
   assert.equal(availabilityAfter.status, 200);
   const availabilityAfterPayload = await availabilityAfter.json();
   assert.equal(availabilityAfterPayload.data.available, true);
+});
+
+test('admin scenario works through started services', async () => {
+  const sessionCookie = await createAuthenticatedSession();
+
+  const adminPageHtml = await fetchText(`${frontendUrl}/admin`, {
+    headers: {
+      cookie: sessionCookie,
+    },
+  });
+  assert.match(adminPageHtml, /管理運用ダッシュボード/);
+
+  const adminFacilitiesPageHtml = await fetchText(`${frontendUrl}/admin/facilities`, {
+    headers: {
+      cookie: sessionCookie,
+    },
+  });
+  assert.match(adminFacilitiesPageHtml, /施設管理/);
+
+  const createFacilityResponse = await fetch(`${backendUrl}/api/admin/facilities`, {
+    method: 'POST',
+    headers: {
+      cookie: sessionCookie,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: 'Admin Smoke Facility',
+      description: 'Admin created facility',
+      location: 'Tokyo / Floor 9',
+      isActive: true,
+    }),
+  });
+  assert.equal(createFacilityResponse.status, 201);
+  const createFacilityPayload = await createFacilityResponse.json();
+  const facility = createFacilityPayload.data.facility;
+  assert.equal(facility.name, 'Admin Smoke Facility');
+
+  const createEquipmentResponse = await fetch(`${backendUrl}/api/admin/equipments`, {
+    method: 'POST',
+    headers: {
+      cookie: sessionCookie,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      facilityId: facility.id,
+      name: 'Admin Smoke Equipment',
+      description: 'Admin created equipment',
+      isActive: true,
+    }),
+  });
+  assert.equal(createEquipmentResponse.status, 201);
+  const createEquipmentPayload = await createEquipmentResponse.json();
+  const equipment = createEquipmentPayload.data.equipment;
+  assert.equal(equipment.name, 'Admin Smoke Equipment');
+
+  const adminReservationsPageHtml = await fetchText(
+    `${frontendUrl}/admin/reservations`,
+    {
+      headers: {
+        cookie: sessionCookie,
+      },
+    },
+  );
+  assert.match(adminReservationsPageHtml, /予約管理/);
+
+  const { startAt, endAt } = createUniqueWindow(7);
+
+  const createReservationResponse = await fetch(`${backendUrl}/api/reservations`, {
+    method: 'POST',
+    headers: {
+      cookie: sessionCookie,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      facilityId: facility.id,
+      equipmentId: equipment.id,
+      startAt: startAt.toISOString(),
+      endAt: endAt.toISOString(),
+      note: 'Admin smoke reservation',
+    }),
+  });
+  assert.equal(createReservationResponse.status, 201);
+  const createReservationPayload = await createReservationResponse.json();
+  const reservation = createReservationPayload.data.reservation;
+
+  const adminReservationsResponse = await fetch(
+    `${backendUrl}/api/admin/reservations?status=reserved&facilityId=${facility.id}`,
+    {
+      headers: {
+        cookie: sessionCookie,
+      },
+    },
+  );
+  assert.equal(adminReservationsResponse.status, 200);
+  const adminReservationsPayload = await adminReservationsResponse.json();
+  assert.ok(
+    adminReservationsPayload.data.items.some((item) => item.id === reservation.id),
+  );
+
+  const updateReservationResponse = await fetch(
+    `${backendUrl}/api/admin/reservations/${reservation.id}`,
+    {
+      method: 'PATCH',
+      headers: {
+        cookie: sessionCookie,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        status: 'completed',
+        note: 'Completed by admin smoke',
+      }),
+    },
+  );
+  assert.equal(updateReservationResponse.status, 200);
+  const updateReservationPayload = await updateReservationResponse.json();
+  assert.equal(updateReservationPayload.data.reservation.status, 'completed');
+
+  const updateEquipmentResponse = await fetch(
+    `${backendUrl}/api/admin/equipments/${equipment.id}`,
+    {
+      method: 'PATCH',
+      headers: {
+        cookie: sessionCookie,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        isActive: false,
+      }),
+    },
+  );
+  assert.equal(updateEquipmentResponse.status, 200);
+
+  const updateFacilityResponse = await fetch(
+    `${backendUrl}/api/admin/facilities/${facility.id}`,
+    {
+      method: 'PATCH',
+      headers: {
+        cookie: sessionCookie,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        isActive: false,
+      }),
+    },
+  );
+  assert.equal(updateFacilityResponse.status, 200);
+
+  const facilityDetailResponse = await fetch(
+    `${backendUrl}/api/facilities/${facility.id}`,
+    {
+      headers: {
+        cookie: sessionCookie,
+      },
+    },
+  );
+  assert.equal(facilityDetailResponse.status, 200);
+  const facilityDetailPayload = await facilityDetailResponse.json();
+  assert.equal(facilityDetailPayload.data.facility.isActive, false);
+  assert.equal(
+    facilityDetailPayload.data.facility.equipments[0].isActive,
+    false,
+  );
+
+  const blockedReservationResponse = await fetch(`${backendUrl}/api/reservations`, {
+    method: 'POST',
+    headers: {
+      cookie: sessionCookie,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      facilityId: facility.id,
+      equipmentId: equipment.id,
+      startAt: startAt.toISOString(),
+      endAt: endAt.toISOString(),
+      note: 'Blocked reservation',
+    }),
+  });
+  assert.equal(blockedReservationResponse.status, 400);
 });

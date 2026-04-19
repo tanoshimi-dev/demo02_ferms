@@ -26,6 +26,17 @@
       <h3 class="resource-card__title">予約一覧</h3>
       <p class="resource-card__description">自分の予約を確認し、キャンセルまで行えます。</p>
     </NuxtLink>
+    <NuxtLink
+      v-if="authState.authenticated && authState.user.role === 'admin'"
+      class="resource-card"
+      to="/admin"
+    >
+      <p class="resource-card__meta">Admin Operations</p>
+      <h3 class="resource-card__title">管理運用</h3>
+      <p class="resource-card__description">
+        施設 / 設備 / 予約の管理者向け運用画面へ進みます。
+      </p>
+    </NuxtLink>
   </section>
 </template>
 

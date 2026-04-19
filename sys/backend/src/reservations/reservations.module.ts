@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { EquipmentEntity } from '../equipments/equipment.entity';
 import { FacilityEntity } from '../facilities/facility.entity';
+import { AdminReservationsController } from './admin-reservations.controller';
 import { ReservationEntity } from './reservation.entity';
 import { ReservationsController } from './reservations.controller';
 import { ReservationsService } from './reservations.service';
@@ -16,7 +17,7 @@ import { ReservationsService } from './reservations.service';
       EquipmentEntity,
     ]),
   ],
-  controllers: [ReservationsController],
+  controllers: [ReservationsController, AdminReservationsController],
   providers: [ReservationsService],
   exports: [ReservationsService],
 })

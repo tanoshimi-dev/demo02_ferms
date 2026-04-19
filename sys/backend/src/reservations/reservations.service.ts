@@ -5,10 +5,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, MoreThan, Repository } from 'typeorm';
+import {
+  FindOptionsWhere,
+  LessThan,
+  MoreThan,
+  Not,
+  Repository,
+} from 'typeorm';
 import type { AuthUser } from '../auth/auth.types';
 import { EquipmentEntity } from '../equipments/equipment.entity';
 import { FacilityEntity } from '../facilities/facility.entity';
+import type {
+  AdminReservationQueryDto,
+  UpdateReservationStatusDto,
+} from './admin-reservation.dto';
 import { ReservationEntity } from './reservation.entity';
 
 @Injectable()
@@ -21,6 +31,37 @@ export class ReservationsService {
     @InjectRepository(EquipmentEntity)
     private readonly equipmentsRepository: Repository<EquipmentEntity>,
   ) {}
+
+  private async findReservedConflicts(input: {
+    facilityId: string;
+    startAt: Date;
+    endAt: Date;
+    excludeReservationId?: string;
+  }) {
+    const where: FindOptionsWhere<ReservationEntity> = {
+      facilityId: input.facilityId,
+      status: 'reserved',
+      startAt: LessThan(input.endAt),
+      endAt: MoreThan(input.startAt),
+      ...(input.excludeReservationId
+        ? {
+            id: Not(input.excludeReservationId),
+          }
+        : {}),
+    };
+
+    return this.reservationsRepository.find({
+      where,
+      relations: {
+        facility: true,
+        equipment: true,
+        user: true,
+      },
+      order: {
+        startAt: 'ASC',
+      },
+    });
+  }
 
   private validateWindow(startAt: Date, endAt: Date): void {
     if (
@@ -90,21 +131,10 @@ export class ReservationsService {
   async checkAvailability(facilityId: string, startAt: Date, endAt: Date) {
     this.validateWindow(startAt, endAt);
 
-    const conflicts = await this.reservationsRepository.find({
-      where: {
-        facilityId,
-        status: 'reserved',
-        startAt: LessThan(endAt),
-        endAt: MoreThan(startAt),
-      },
-      relations: {
-        facility: true,
-        equipment: true,
-        user: true,
-      },
-      order: {
-        startAt: 'ASC',
-      },
+    const conflicts = await this.findReservedConflicts({
+      facilityId,
+      startAt,
+      endAt,
     });
 
     return {
@@ -177,11 +207,66 @@ export class ReservationsService {
     return items.map((reservation) => this.serializeReservation(reservation));
   }
 
+  async listAdminReservations(query: AdminReservationQueryDto) {
+    const where: FindOptionsWhere<ReservationEntity> = {};
+
+    if (query.facilityId) {
+      where.facilityId = query.facilityId;
+    }
+    if (query.equipmentId) {
+      where.equipmentId = query.equipmentId;
+    }
+    if (query.userId) {
+      where.userId = query.userId;
+    }
+    if (query.status) {
+      where.status = query.status;
+    }
+
+    const items = await this.reservationsRepository.find({
+      where,
+      relations: {
+        facility: true,
+        equipment: true,
+        user: true,
+      },
+      order: {
+        startAt: 'DESC',
+      },
+    });
+
+    return items.map((reservation) => this.serializeReservation(reservation));
+  }
+
   async getReservationForUserOrFail(id: string, userId: string) {
     const reservation = await this.reservationsRepository.findOne({
       where: {
         id,
         userId,
+      },
+      relations: {
+        facility: true,
+        equipment: true,
+        user: true,
+      },
+    });
+
+    if (!reservation) {
+      throw new NotFoundException({
+        error: {
+          code: 'reservation_not_found',
+          message: '予約が見つかりません。',
+        },
+      });
+    }
+
+    return this.serializeReservation(reservation);
+  }
+
+  async getAdminReservationOrFail(id: string) {
+    const reservation = await this.reservationsRepository.findOne({
+      where: {
+        id,
       },
       relations: {
         facility: true,
@@ -225,6 +310,62 @@ export class ReservationsService {
     }
 
     reservation.status = 'cancelled';
+    await this.reservationsRepository.save(reservation);
+    return this.serializeReservation(reservation);
+  }
+
+  async updateReservationStatus(
+    id: string,
+    input: UpdateReservationStatusDto,
+  ) {
+    const reservation = await this.reservationsRepository.findOne({
+      where: {
+        id,
+      },
+      relations: {
+        facility: true,
+        equipment: true,
+        user: true,
+      },
+    });
+
+    if (!reservation) {
+      throw new NotFoundException({
+        error: {
+          code: 'reservation_not_found',
+          message: '予約が見つかりません。',
+        },
+      });
+    }
+
+    if (input.status === 'reserved') {
+      this.validateWindow(reservation.startAt, reservation.endAt);
+      await this.resolveTargets(
+        reservation.facilityId,
+        reservation.equipmentId ?? undefined,
+      );
+
+      const conflicts = await this.findReservedConflicts({
+        facilityId: reservation.facilityId,
+        startAt: reservation.startAt,
+        endAt: reservation.endAt,
+        excludeReservationId: reservation.id,
+      });
+      if (conflicts.length > 0) {
+        throw new ConflictException({
+          error: {
+            code: 'reservation_conflict',
+            message: '同一時間帯の予約がすでに存在します。',
+          },
+        });
+      }
+    }
+
+    reservation.status = input.status;
+    if (typeof input.note === 'string') {
+      reservation.note = input.note.trim() || null;
+    }
+
     await this.reservationsRepository.save(reservation);
     return this.serializeReservation(reservation);
   }

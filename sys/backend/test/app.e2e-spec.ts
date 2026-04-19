@@ -1,23 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 
-type FacilitiesResponseBody = {
+type CreateFacilityResponseBody = {
   data: {
-    items: Array<{
+    facility: {
       id: string;
-    }>;
+    };
   };
 };
 
-type FacilityDetailResponseBody = {
+type CreateEquipmentResponseBody = {
   data: {
-    facility: {
-      equipments: Array<{
-        id: string;
-      }>;
+    equipment: {
+      id: string;
+      facilityId: string;
     };
   };
 };
@@ -37,6 +36,16 @@ type CancelReservationResponseBody = {
     };
   };
 };
+
+function createUniqueWindow() {
+  const startAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const endAt = new Date(startAt.getTime() + 60 * 60 * 1000);
+
+  return {
+    startAt,
+    endAt,
+  };
+}
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -60,6 +69,13 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api');
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidUnknownValues: false,
+      }),
+    );
     await app.init();
   });
 
@@ -114,27 +130,41 @@ describe('AppController (e2e)', () => {
       })
       .expect(302);
 
-    const facilitiesResponse = await request(app.getHttpServer())
-      .get('/api/facilities')
-      .set('Cookie', handoverResponse.headers['set-cookie'])
-      .expect(200);
+    const suffix = Date.now().toString();
 
-    const facilitiesBody = facilitiesResponse.body as FacilitiesResponseBody;
-    const facilityId = facilitiesBody.data.items[0]?.id;
+    const createFacilityResponse = await request(app.getHttpServer())
+      .post('/api/admin/facilities')
+      .set('Cookie', handoverResponse.headers['set-cookie'])
+      .send({
+        name: `E2E Facility ${suffix}`,
+        description: 'Facility for reservation e2e',
+        location: 'Tokyo / E2E',
+        isActive: true,
+      })
+      .expect(201);
+
+    const createFacilityBody =
+      createFacilityResponse.body as CreateFacilityResponseBody;
+    const facilityId = createFacilityBody.data.facility.id;
     expect(facilityId).toBeTruthy();
 
-    const facilityDetailResponse = await request(app.getHttpServer())
-      .get(`/api/facilities/${facilityId}`)
+    const createEquipmentResponse = await request(app.getHttpServer())
+      .post('/api/admin/equipments')
       .set('Cookie', handoverResponse.headers['set-cookie'])
-      .expect(200);
+      .send({
+        facilityId,
+        name: `E2E Equipment ${suffix}`,
+        description: 'Equipment for reservation e2e',
+        isActive: true,
+      })
+      .expect(201);
 
-    const facilityDetailBody =
-      facilityDetailResponse.body as FacilityDetailResponseBody;
-    const equipmentId = facilityDetailBody.data.facility.equipments[0]?.id;
+    const createEquipmentBody =
+      createEquipmentResponse.body as CreateEquipmentResponseBody;
+    const equipmentId = createEquipmentBody.data.equipment.id;
     expect(equipmentId).toBeTruthy();
-    const startAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
-    startAt.setMinutes(0, 0, 0);
-    const endAt = new Date(startAt.getTime() + 60 * 60 * 1000);
+
+    const { startAt, endAt } = createUniqueWindow();
 
     const createResponse = await request(app.getHttpServer())
       .post('/api/reservations')

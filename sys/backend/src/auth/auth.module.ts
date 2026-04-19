@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AdminAuthGuard } from './admin.guard';
 import { loadRuntimeConfig } from '../config/runtime.config';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
@@ -31,7 +32,8 @@ import { SessionStore } from './session.store';
     SessionStore,
     AuthService,
     SessionAuthGuard,
+    AdminAuthGuard,
   ],
-  exports: [AuthService, SessionAuthGuard],
+  exports: [AuthService, SessionAuthGuard, AdminAuthGuard],
 })
 export class AuthModule {}
