@@ -9,6 +9,9 @@
       <nav class="header__nav" aria-label="foundation navigation">
         <NuxtLink to="/">Home</NuxtLink>
         <NuxtLink to="/dashboard">Dashboard</NuxtLink>
+        <NuxtLink to="/facilities">Facilities</NuxtLink>
+        <NuxtLink to="/equipments">Equipments</NuxtLink>
+        <NuxtLink to="/reservations">Reservations</NuxtLink>
         <a :href="backendPublicUrl" target="_blank" rel="noreferrer">Backend</a>
         <a v-if="authState.authenticated" :href="logoutUrl">Logout</a>
         <a v-else :href="handoverUrl">Login</a>
@@ -57,6 +60,7 @@ const backendPublicUrl = config.public.backendPublicUrl;
 
 .header__nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   font-weight: 600;
   color: #3658b3;

@@ -29,7 +29,7 @@ import { UsersModule } from './users/users.module';
           password: runtimeConfig.database.password,
           database: runtimeConfig.database.name,
           autoLoadEntities: true,
-          synchronize: false,
+          synchronize: runtimeConfig.database.synchronize,
         };
       },
     }),

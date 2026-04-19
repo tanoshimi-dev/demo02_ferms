@@ -6,7 +6,7 @@ COPY . .
 
 FROM base AS development
 EXPOSE 3000
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["sh", "-c", "npm run dev -- --public --port ${PORT:-3000} --publicURL ${NUXT_PUBLIC_FRONTEND_PUBLIC_URL:-http://localhost:3000}"]
 
 FROM base AS build
 RUN npm run build

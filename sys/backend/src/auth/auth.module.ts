@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { loadRuntimeConfig } from '../config/runtime.config';
+import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AUTH_PROVIDER } from './auth.constants';
 import { SessionAuthGuard } from './auth.guard';
@@ -9,6 +10,7 @@ import { PortalAuthProvider } from './portal-auth.provider';
 import { SessionStore } from './session.store';
 
 @Module({
+  imports: [UsersModule],
   controllers: [AuthController],
   providers: [
     {

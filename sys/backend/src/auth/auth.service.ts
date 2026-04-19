@@ -9,6 +9,7 @@ import { UnauthenticatedError } from './auth.errors';
 import { parseCookieHeader } from './auth.helpers';
 import { SessionStore } from './session.store';
 import type { AuthProvider, AuthSession, AuthUser } from './auth.types';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -16,13 +17,23 @@ export class AuthService {
     @Inject(AUTH_PROVIDER)
     private readonly provider: AuthProvider,
     private readonly sessionStore: SessionStore,
+    private readonly usersService: UsersService,
     @Inject('RUNTIME_CONFIG')
     private readonly runtimeConfig: RuntimeConfig = loadRuntimeConfig(),
   ) {}
 
   async handover(request: Request): Promise<AuthSession> {
     const user = await this.provider.authenticate(request);
-    return this.sessionStore.create(user, this.runtimeConfig.auth.sessionTtlMs);
+    const ensuredUser = await this.usersService.ensureAuthUser(user);
+    return this.sessionStore.create(
+      {
+        id: ensuredUser.id,
+        email: ensuredUser.email,
+        name: ensuredUser.name,
+        role: ensuredUser.role,
+      },
+      this.runtimeConfig.auth.sessionTtlMs,
+    );
   }
 
   currentSession(request: Request): AuthSession | null {
@@ -43,7 +54,14 @@ export class AuthService {
     }
 
     try {
-      return await this.provider.authenticate(request);
+      const user = await this.provider.authenticate(request);
+      const ensuredUser = await this.usersService.ensureAuthUser(user);
+      return {
+        id: ensuredUser.id,
+        email: ensuredUser.email,
+        name: ensuredUser.name,
+        role: ensuredUser.role,
+      };
     } catch (error) {
       if (error instanceof UnauthenticatedError) {
         return null;

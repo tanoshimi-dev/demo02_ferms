@@ -83,6 +83,7 @@ describe('PortalAuthProvider', () => {
         name: 'demo02_ferms',
         username: 'postgres',
         password: 'postgres',
+        synchronize: true,
       },
       auth: {
         mode: 'portal',
@@ -162,6 +163,7 @@ describe('PortalAuthProvider', () => {
         name: 'demo02_ferms',
         username: 'postgres',
         password: 'postgres',
+        synchronize: true,
       },
       auth: {
         mode: 'portal',
@@ -233,6 +235,7 @@ describe('PortalAuthProvider', () => {
         name: 'demo02_ferms',
         username: 'postgres',
         password: 'postgres',
+        synchronize: true,
       },
       auth: {
         mode: 'portal',

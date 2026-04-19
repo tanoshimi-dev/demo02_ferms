@@ -33,6 +33,7 @@ services:
       DATABASE_NAME: ${POSTGRES_DB:-demo02_ferms}
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DATABASE_SYNCHRONIZE: ${DATABASE_SYNCHRONIZE:-true}
       AUTH_MODE: ${AUTH_MODE:-mock}
       MOCK_AUTH_USER_JSON: "${MOCK_AUTH_USER_JSON:-{\"id\":\"demo02-user-001\",\"email\":\"demo02.user@local.test\",\"name\":\"Demo02 Local User\",\"role\":\"admin\"}}"
       PORTAL_COOKIE_NAMES: ${PORTAL_COOKIE_NAMES:-portal_token}

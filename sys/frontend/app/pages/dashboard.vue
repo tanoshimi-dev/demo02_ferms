@@ -5,7 +5,7 @@
       <h2 class="dashboard__title">Authenticated dashboard skeleton</h2>
       <p class="dashboard__description">
         portal handover または mock handover 済みのユーザーだけが到達できる、
-        Phase 2 の共通レイアウトページです。
+        Phase 3 以降の予約導線を積み上げるための共通レイアウトページです。
       </p>
     </div>
 
@@ -13,6 +13,19 @@
       v-if="authState.authenticated"
       :auth-state="authState"
     />
+  </section>
+
+  <section class="stack-grid">
+    <NuxtLink class="resource-card" to="/facilities">
+      <p class="resource-card__meta">Catalog</p>
+      <h3 class="resource-card__title">施設一覧</h3>
+      <p class="resource-card__description">施設と設備を確認し、予約作成へ進みます。</p>
+    </NuxtLink>
+    <NuxtLink class="resource-card" to="/reservations">
+      <p class="resource-card__meta">My Reservations</p>
+      <h3 class="resource-card__title">予約一覧</h3>
+      <p class="resource-card__description">自分の予約を確認し、キャンセルまで行えます。</p>
+    </NuxtLink>
   </section>
 </template>
 

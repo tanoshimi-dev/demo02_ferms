@@ -59,8 +59,181 @@ textarea {
   font-weight: 700;
 }
 
+.resource-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.resource-page__eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #3658b3;
+}
+
+.resource-page__title {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: #172033;
+}
+
+.resource-page__description,
+.resource-page__meta {
+  margin: 1rem 0 0;
+  line-height: 1.7;
+  color: #475679;
+}
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.resource-card {
+  display: block;
+  padding: 1.5rem;
+  border: 1px solid #d7def0;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(23, 32, 51, 0.08);
+}
+
+.resource-card__meta,
+.resource-card__footer {
+  margin: 0;
+  color: #586a91;
+}
+
+.resource-card__title {
+  margin: 0.5rem 0 0;
+  color: #172033;
+}
+
+.resource-card__description {
+  margin: 1rem 0 0;
+  line-height: 1.7;
+  color: #475679;
+}
+
+.resource-card__actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.list {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #eef3ff;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.form label {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.form input,
+.form select,
+.form textarea {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #cfd8ec;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.1rem;
+  border: 0;
+  border-radius: 999px;
+  background: #3658b3;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.button--ghost {
+  background: #eef3ff;
+  color: #3658b3;
+}
+
+.form__message {
+  margin: 1rem 0 0;
+  color: #117a43;
+}
+
+.form__error {
+  margin: 1rem 0 0;
+  color: #c0392b;
+}
+
+.availability {
+  margin-top: 1rem;
+}
+
+.availability__status {
+  margin: 0;
+  font-weight: 700;
+}
+
+.detail-list {
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.detail-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.detail-list dt {
+  color: #475679;
+  font-weight: 600;
+}
+
+.detail-list dd {
+  margin: 0;
+  color: #172033;
+  text-align: right;
+}
+
 @media (max-width: 900px) {
   .stack-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .resource-grid {
     grid-template-columns: 1fr;
   }
 }

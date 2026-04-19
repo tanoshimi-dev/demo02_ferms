@@ -1,9 +1,12 @@
 import type { Request } from 'express';
+import type { InsertResult, Repository } from 'typeorm';
 import { AuthService } from './auth.service';
 import { SessionStore } from './session.store';
 import { UnauthenticatedError } from './auth.errors';
 import type { AuthProvider, AuthUser } from './auth.types';
 import type { RuntimeConfig } from '../config/runtime.config';
+import { UsersService } from '../users/users.service';
+import { UserEntity } from '../users/user.entity';
 
 class StubProvider implements AuthProvider {
   constructor(
@@ -37,6 +40,7 @@ function createRuntimeConfig(
       name: 'demo02_ferms',
       username: 'postgres',
       password: 'postgres',
+      synchronize: true,
     },
     auth: {
       mode: 'mock',
@@ -61,11 +65,44 @@ function createRuntimeConfig(
   };
 }
 
+function createUsersService(): UsersService {
+  let persistedUser: UserEntity | null = null;
+
+  const repository = {
+    upsert: jest.fn(
+      async (entity: Partial<UserEntity> | Partial<UserEntity>[]) => {
+        const user = Array.isArray(entity) ? entity[0] : entity;
+        persistedUser = {
+          id: user.id ?? 'user-id',
+          email: user.email ?? 'user@example.com',
+          name: user.name ?? 'User',
+          role: user.role ?? 'user',
+          reservations: [],
+          createdAt: new Date('2026-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+        };
+
+        return {} as InsertResult;
+      },
+    ),
+    findOneByOrFail: jest.fn(async ({ id }: { id: string }) => {
+      if (!persistedUser || persistedUser.id !== id) {
+        throw new Error('User not found');
+      }
+
+      return persistedUser;
+    }),
+  };
+
+  return new UsersService(repository as unknown as Repository<UserEntity>);
+}
+
 describe('AuthService', () => {
   it('sanitizes returnTo to the frontend origin', () => {
     const service = new AuthService(
       new StubProvider(null),
       new SessionStore(),
+      createUsersService(),
       createRuntimeConfig(),
     );
 
@@ -81,6 +118,7 @@ describe('AuthService', () => {
     const service = new AuthService(
       new StubProvider(null),
       new SessionStore(),
+      createUsersService(),
       createRuntimeConfig({
         auth: {
           ...createRuntimeConfig().auth,
@@ -107,6 +145,7 @@ describe('AuthService', () => {
         role: 'user',
       }),
       new SessionStore(),
+      createUsersService(),
       createRuntimeConfig(),
     );
 
@@ -137,6 +176,7 @@ describe('AuthService', () => {
         role: 'admin',
       }),
       new SessionStore(),
+      createUsersService(),
       createRuntimeConfig({
         auth: {
           ...createRuntimeConfig().auth,

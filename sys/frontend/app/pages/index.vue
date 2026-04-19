@@ -48,10 +48,9 @@
     <div class="card">
       <h3 class="card__title">Next step</h3>
       <p class="card__description">
-        認証が完了すると、共通ヘッダーと dashboard 骨組みを通じて Phase 3 以降の
-        予約導線を積み上げられます。
+        認証が完了すると、施設一覧、設備一覧、予約作成、予約一覧の利用者導線へ進めます。
       </p>
-      <NuxtLink class="card__link" to="/dashboard">Dashboard へ進む</NuxtLink>
+      <NuxtLink class="card__link" to="/facilities">施設一覧へ進む</NuxtLink>
     </div>
   </section>
 </template>

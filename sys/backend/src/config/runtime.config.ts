@@ -11,6 +11,7 @@ type RuntimeConfig = {
     name: string;
     username: string;
     password: string;
+    synchronize: boolean;
   };
   auth: {
     mode: 'mock' | 'portal';
@@ -184,6 +185,11 @@ export function loadRuntimeConfig(
         env.DATABASE_PASSWORD,
         'postgres',
         'DATABASE_PASSWORD',
+      ),
+      synchronize: readBoolean(
+        env.DATABASE_SYNCHRONIZE,
+        true,
+        'DATABASE_SYNCHRONIZE',
       ),
     },
     auth: {
