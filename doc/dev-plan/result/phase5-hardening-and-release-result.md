@@ -34,6 +34,9 @@
 ### 4. 本番設定とデプロイ前提の整理
 
 - `sys\docker-compose.prod.yml` を本番前提の URL / auth / cookie 設定込みで更新
+- production compose は `demo01_crm` と同じく Traefik external network / labels / internal expose 構成へ調整
+- production compose の DB 初期化用に `db/migrations/001_create_ferms_core.sql` と `db/seeds/001_seed_catalog.sql` を追加
+- frontend の backend 接続先は Nuxt private runtime override (`NUXT_BACKEND_API_BASE_URL`) でも指定し、production build 後の container でも内部 API URL を差し替えられるようにした
 - backend / frontend / db に restart と healthcheck を追加
 - backend は本番例で `AUTH_MODE=portal` とし、`DATABASE_SYNCHRONIZE=false` を既定化
 - `sys\.env.production.example` を追加し、
@@ -67,7 +70,8 @@
 1. `sys\.env.production.example` を元に本番値を用意し、秘密値だけ差し替える
 2. `AUTH_MODE=portal`、issuer、JWKS URL、cookie domain / secure を最優先で確認する
 3. reverse proxy 配下で `demo02-ferms.tanoshimi.dev` と `api-demo02-ferms.tanoshimi.dev` に正しく流れることを確認する
-4. `GET /api/health` と frontend の `/api/health` が compose 上で疎通することを確認する
+4. 初回失敗で空の PostgreSQL volume が残った場合は volume を削除してから再作成し、init SQL を再実行させる
+5. `GET /api/health` と frontend の `/api/health` が compose 上で疎通することを確認する
 
 ## リリース後に見るログ / 切り分け観点
 

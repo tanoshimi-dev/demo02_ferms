@@ -1,8 +1,9 @@
 # Seeds
 
-Phase 5 時点では、空の DB で backend が起動したときに
-`sys\backend\src\facilities\catalog-seed.service.ts` から
-デモ向け facility / equipment catalog が自動投入されます。
+Phase 5 時点では、本番 compose の DB 初期化時に
+`sys\db\migrations\001_create_ferms_core.sql` と
+`sys\db\seeds\001_seed_catalog.sql` から
+デモ向け facility / equipment catalog が投入されます。
 
 投入されるデータは次を意図しています。
 

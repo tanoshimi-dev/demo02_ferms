@@ -50,3 +50,5 @@
 - MVP のデモ用データは、空の DB 起動時に backend の catalog seed で投入できる形を優先する
 - 本番設定例は `sys\docker-compose.prod.yml` と `sys\.env.production.example` を基準に維持する
 - UI 調整では利用者 / 管理者の両導線で、空状態、成功メッセージ、エラー表示を揃える
+- `docker-compose.prod.yml` は `demo01_crm` と同じく Traefik external network と router labels を使う前提で維持する
+- `DATABASE_SYNCHRONIZE=false` を使う本番 compose では、`db/migrations` / `db/seeds` の init SQL を必ず用意する

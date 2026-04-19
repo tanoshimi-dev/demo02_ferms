@@ -15,6 +15,7 @@ sys/backend/coverage/
 
 # Production-only local config
 sys/docker-compose.prod.yml
+doc/dev-plan/result/vps-deploy-troubleshooting-result.md
 
 # Logs
 logs/
