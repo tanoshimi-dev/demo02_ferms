@@ -1,0 +1,7 @@
+{
+  "name": "demo02-ferms-sys",
+  "private": true,
+  "scripts": {
+    "test:smoke": "node --test ./scripts/smoke.test.mjs"
+  }
+}

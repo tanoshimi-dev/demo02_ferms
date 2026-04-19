@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-demo02_ferms}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - '${DATABASE_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB'
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      target: development
+    environment:
+      PORT: ${BACKEND_PORT:-8080}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${POSTGRES_DB:-demo02_ferms}
+      DATABASE_USER: ${POSTGRES_USER:-postgres}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - '${BACKEND_PORT:-8080}:8080'
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(''http://127.0.0.1:8080/api/health'').then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))"'
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    environment:
+      PORT: ${FRONTEND_PORT:-3000}
+      BACKEND_API_BASE_URL: http://backend:${BACKEND_PORT:-8080}
+      NUXT_PUBLIC_BACKEND_PUBLIC_URL: ${NUXT_PUBLIC_BACKEND_PUBLIC_URL:-http://localhost:8080}
+    ports:
+      - '${FRONTEND_PORT:-3000}:3000'
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
