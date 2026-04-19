@@ -1,15 +1,27 @@
 <template>
   <section class="hero">
     <div class="hero__copy">
-      <p class="hero__eyebrow">Phase 1 Foundation</p>
-      <h2 class="hero__title">FERMS Foundation</h2>
+      <p class="hero__eyebrow">Phase 2 Authentication</p>
+      <h2 class="hero__title">FERMS Auth Foundation</h2>
       <p class="hero__description">
-        Nuxt、NestJS、PostgreSQL、Docker を接続した最小構成です。Phase 2
-        以降の認証と予約機能を積み上げるための土台として、frontend / backend /
-        db の疎通を確認できます。
+        portal handover と FERMS ローカルセッションを前提に、Nuxt / NestJS /
+        PostgreSQL / Docker を接続した認証付きの共通基盤です。未認証時はここから
+        認証引き継ぎを開始し、認証済みであれば dashboard 骨組みへ進めます。
       </p>
     </div>
 
+    <AuthSummaryCard
+      v-if="authState.authenticated"
+      :auth-state="authState"
+    />
+    <AuthStartPanel
+      v-else
+      :handover-url="handoverUrl"
+      :error-message="authErrorMessage"
+    />
+  </section>
+
+  <section class="stack-grid">
     <div class="card">
       <h3 class="card__title">Backend health</h3>
       <p class="card__status" :data-status="statusLabel">{{ statusLabel }}</p>
@@ -32,11 +44,25 @@
         {{ error.statusMessage ?? 'Backend health の取得に失敗しました。' }}
       </p>
     </div>
+
+    <div class="card">
+      <h3 class="card__title">Next step</h3>
+      <p class="card__description">
+        認証が完了すると、共通ヘッダーと dashboard 骨組みを通じて Phase 3 以降の
+        予約導線を積み上げられます。
+      </p>
+      <NuxtLink class="card__link" to="/dashboard">Dashboard へ進む</NuxtLink>
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
 const { data, error } = await useBackendHealth();
+const {
+  authState,
+  errorMessage: authErrorMessage,
+  handoverUrl,
+} = await useAuthSession();
 
 const statusLabel = computed(() => {
   if (error.value) {

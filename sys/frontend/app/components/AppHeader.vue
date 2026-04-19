@@ -8,7 +8,10 @@
 
       <nav class="header__nav" aria-label="foundation navigation">
         <NuxtLink to="/">Home</NuxtLink>
+        <NuxtLink to="/dashboard">Dashboard</NuxtLink>
         <a :href="backendPublicUrl" target="_blank" rel="noreferrer">Backend</a>
+        <a v-if="authState.authenticated" :href="logoutUrl">Logout</a>
+        <a v-else :href="handoverUrl">Login</a>
       </nav>
     </div>
   </header>
@@ -16,6 +19,7 @@
 
 <script setup lang="ts">
 const config = useRuntimeConfig();
+const { authState, handoverUrl, logoutUrl } = await useAuthSession();
 
 const appName = config.public.appName;
 const backendPublicUrl = config.public.backendPublicUrl;
