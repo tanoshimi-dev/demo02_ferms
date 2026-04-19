@@ -57,7 +57,7 @@ test('backend health endpoint responds with ok status', async () => {
 test('frontend landing page renders the foundation title', async () => {
   const html = await fetchText(frontendUrl);
 
-  assert.match(html, /FERMS Auth Foundation/);
+  assert.match(html, /FERMS Reservation Demo/);
   assert.match(html, /認証引き継ぎを実行/);
 });
 
@@ -91,7 +91,7 @@ test('frontend dashboard renders the authenticated user after handover', async (
     },
   });
 
-  assert.match(html, /Authenticated dashboard skeleton/);
+  assert.match(html, /予約と運用の開始点/);
   assert.match(html, /Demo02 Local User/);
 });
 
@@ -184,7 +184,7 @@ test('reservation scenario works through started services', async () => {
   );
 
   const reservationPageHtml = await fetchText(
-    `${frontendUrl}/reservations/${reservation.id}`,
+    `${frontendUrl}/reservations/${reservation.id}?created=1`,
     {
       headers: {
         cookie: sessionCookie,
@@ -192,6 +192,7 @@ test('reservation scenario works through started services', async () => {
     },
   );
   assert.match(reservationPageHtml, /Reservation Detail/);
+  assert.match(reservationPageHtml, /予約を作成しました/);
   assert.match(reservationPageHtml, /Smoke reservation/);
 
   const cancelReservationResponse = await fetch(

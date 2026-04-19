@@ -12,7 +12,7 @@
     <div class="stack-grid">
       <section class="resource-card">
         <h3 class="resource-card__title">設備一覧</h3>
-        <ul class="list">
+        <ul v-if="(facility?.equipments?.length ?? 0) > 0" class="list">
           <li v-for="equipment in facility?.equipments ?? []" :key="equipment.id">
             <NuxtLink :to="`/equipments/${equipment.id}`">
               {{ equipment.name }}
@@ -20,10 +20,19 @@
             <span>{{ equipment.isActive ? '利用可能' : '停止中' }}</span>
           </li>
         </ul>
+        <div v-else class="empty-state">
+          <h4 class="empty-state__title">設備はまだありません</h4>
+          <p class="empty-state__description">
+            この施設に紐づく設備が未登録の場合でも、施設単位の予約は作成できます。
+          </p>
+        </div>
       </section>
 
       <section class="resource-card">
         <h3 class="resource-card__title">予約作成</h3>
+        <p v-if="isReservationDisabled" class="form__error">
+          {{ reservationDisabledReason }}
+        </p>
         <form class="form" @submit.prevent="createReservation">
           <label>
             <span>設備</span>
@@ -33,8 +42,9 @@
                 v-for="equipment in facility?.equipments ?? []"
                 :key="equipment.id"
                 :value="equipment.id"
+                :disabled="!equipment.isActive"
               >
-                {{ equipment.name }}
+                {{ equipment.name }}{{ equipment.isActive ? '' : ' (停止中)' }}
               </option>
             </select>
           </label>
@@ -55,10 +65,17 @@
           </label>
 
           <div class="form__actions">
-            <button type="button" class="button button--ghost" @click="checkAvailability">
+            <button
+              type="button"
+              class="button button--ghost"
+              :disabled="isReservationDisabled"
+              @click="checkAvailability"
+            >
               空き状況を確認
             </button>
-            <button type="submit" class="button">予約を作成</button>
+            <button type="submit" class="button" :disabled="isReservationDisabled">
+              予約を作成
+            </button>
           </div>
         </form>
 
@@ -135,6 +152,31 @@ const availability = ref<{
 } | null>(null);
 const errorMessage = ref('');
 const message = ref('');
+const selectedEquipment = computed(() =>
+  facility.value?.equipments.find((equipment) => equipment.id === form.equipmentId),
+);
+const isReservationDisabled = computed(() => {
+  if (!facility.value?.isActive) {
+    return true;
+  }
+
+  if (form.equipmentId && !selectedEquipment.value?.isActive) {
+    return true;
+  }
+
+  return false;
+});
+const reservationDisabledReason = computed(() => {
+  if (!facility.value?.isActive) {
+    return 'この施設は現在停止中のため、新規予約できません。';
+  }
+
+  if (form.equipmentId && !selectedEquipment.value?.isActive) {
+    return '選択した設備は停止中のため、別の設備を選択してください。';
+  }
+
+  return '';
+});
 
 function toIsoLocal(value: string) {
   return value ? new Date(value).toISOString() : '';
@@ -143,6 +185,7 @@ function toIsoLocal(value: string) {
 async function checkAvailability() {
   errorMessage.value = '';
   message.value = '';
+  availability.value = null;
 
   try {
     const result = (await $fetch('/api/reservations/availability', {
@@ -197,7 +240,7 @@ async function createReservation() {
     message.value = '予約を作成しました。';
     availability.value = null;
     await refresh();
-    await router.push(`/reservations/${result.data.reservation.id}`);
+    await router.push(`/reservations/${result.data.reservation.id}?created=1`);
   } catch (error) {
     errorMessage.value =
       (error as { data?: { error?: { message?: string } } }).data?.error?.message ??

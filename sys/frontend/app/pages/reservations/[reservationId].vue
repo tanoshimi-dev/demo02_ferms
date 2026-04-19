@@ -6,6 +6,9 @@
       <p class="resource-page__description">
         {{ reservation?.equipmentName ?? '施設予約' }}
       </p>
+      <p v-if="route.query.created === '1'" class="form__message">
+        予約を作成しました。内容を確認してください。
+      </p>
       <dl v-if="reservation" class="detail-list">
         <div>
           <dt>開始</dt>
@@ -25,6 +28,18 @@
         </div>
       </dl>
     </div>
+
+    <section v-if="reservation" class="resource-card">
+      <p class="resource-card__meta">Next step</p>
+      <h3 class="resource-card__title">予約後の確認</h3>
+      <p class="resource-card__description">
+        予約一覧へ戻って状態を確認したり、必要に応じてキャンセルできます。
+      </p>
+      <div class="resource-card__actions">
+        <NuxtLink to="/reservations">予約一覧へ戻る</NuxtLink>
+        <NuxtLink to="/facilities">追加の予約を探す</NuxtLink>
+      </div>
+    </section>
   </section>
 </template>
 

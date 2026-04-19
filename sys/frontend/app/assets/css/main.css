@@ -120,6 +120,7 @@ textarea {
 
 .resource-card__actions {
   display: flex;
+   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
   margin-top: 1rem;
@@ -186,6 +187,11 @@ textarea {
   color: #3658b3;
 }
 
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .form__message {
   margin: 1rem 0 0;
   color: #117a43;
@@ -226,6 +232,32 @@ textarea {
   margin: 0;
   color: #172033;
   text-align: right;
+}
+
+.empty-state {
+  text-align: center;
+}
+
+.empty-state__title {
+  margin: 0;
+  color: #172033;
+}
+
+.empty-state__description {
+  margin: 0.75rem 0 0;
+  line-height: 1.7;
+  color: #586a91;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: #eef3ff;
+  color: #3658b3;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 @media (max-width: 900px) {

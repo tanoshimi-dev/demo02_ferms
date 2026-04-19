@@ -8,7 +8,22 @@
       </p>
     </div>
 
-    <div class="resource-grid">
+    <p v-if="message" class="form__message">{{ message }}</p>
+    <p v-if="errorMessage || error" class="form__error">
+      {{ errorMessage || error?.statusMessage || '予約一覧の取得に失敗しました。' }}
+    </p>
+
+    <section v-if="reservations.length === 0" class="resource-card empty-state">
+      <h3 class="empty-state__title">予約はまだありません</h3>
+      <p class="empty-state__description">
+        施設詳細から空き状況を確認して、新しい予約を作成してください。
+      </p>
+      <div class="resource-card__actions">
+        <NuxtLink to="/facilities">施設一覧へ</NuxtLink>
+      </div>
+    </section>
+
+    <div v-else class="resource-grid">
       <article v-for="reservation in reservations" :key="reservation.id" class="resource-card">
         <p class="resource-card__meta">{{ reservation.facilityName }}</p>
         <h3 class="resource-card__title">
@@ -41,7 +56,9 @@ await useAuthSession({
   required: true,
 });
 
-const { data, refresh } = await useFetch('/api/reservations');
+const { data, error, refresh } = await useFetch('/api/reservations');
+const message = ref('');
+const errorMessage = ref('');
 
 const reservations = computed(() => {
   const payload = data.value as
@@ -63,9 +80,19 @@ const reservations = computed(() => {
 });
 
 async function cancelReservation(reservationId: string) {
-  await $fetch(`/api/reservations/${reservationId}/cancel`, {
-    method: 'PATCH',
-  });
-  await refresh();
+  message.value = '';
+  errorMessage.value = '';
+
+  try {
+    await $fetch(`/api/reservations/${reservationId}/cancel`, {
+      method: 'PATCH',
+    });
+    await refresh();
+    message.value = '予約をキャンセルしました。空き状況へ再反映されています。';
+  } catch (requestError) {
+    errorMessage.value =
+      (requestError as { data?: { error?: { message?: string } } }).data?.error
+        ?.message ?? '予約のキャンセルに失敗しました。';
+  }
 }
 </script>

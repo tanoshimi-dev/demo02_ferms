@@ -47,3 +47,6 @@
 - cookie domain, secure, issuer, jwks の差異は最優先で確認する
 - 監視や通知は最小限でも、障害時に原因を追えるログ設計は残す
 - 総合確認は対象サービスを起動して行い、机上確認だけで完了扱いにしない
+- MVP のデモ用データは、空の DB 起動時に backend の catalog seed で投入できる形を優先する
+- 本番設定例は `sys\docker-compose.prod.yml` と `sys\.env.production.example` を基準に維持する
+- UI 調整では利用者 / 管理者の両導線で、空状態、成功メッセージ、エラー表示を揃える

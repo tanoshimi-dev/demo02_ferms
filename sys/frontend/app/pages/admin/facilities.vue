@@ -19,7 +19,9 @@
           </button>
         </div>
 
-        <ul class="list">
+        <p v-if="listErrorMessage" class="form__error">{{ listErrorMessage }}</p>
+
+        <ul v-if="facilities.length > 0" class="list">
           <li v-for="facility in facilities" :key="facility.id">
             <div>
               <strong>{{ facility.name }}</strong>
@@ -32,6 +34,13 @@
             </button>
           </li>
         </ul>
+
+        <div v-else class="empty-state">
+          <h3 class="empty-state__title">施設はまだありません</h3>
+          <p class="empty-state__description">
+            右側のフォームから最初の施設を登録すると、利用者導線にも反映されます。
+          </p>
+        </div>
       </section>
 
       <section class="resource-card">
@@ -94,6 +103,7 @@ type AdminFacility = {
 
 const selectedFacilityId = ref('');
 const facilities = ref<AdminFacility[]>([]);
+const listErrorMessage = ref('');
 const message = ref('');
 const errorMessage = ref('');
 const form = reactive({
@@ -128,12 +138,21 @@ function selectFacility(facility: AdminFacility) {
 }
 
 async function loadFacilities() {
-  const payload = (await $fetch('/api/admin/facilities')) as {
-    data: {
-      items: AdminFacility[];
+  listErrorMessage.value = '';
+
+  try {
+    const payload = (await $fetch('/api/admin/facilities')) as {
+      data: {
+        items: AdminFacility[];
+      };
     };
-  };
-  facilities.value = payload.data.items;
+    facilities.value = payload.data.items;
+  } catch (error) {
+    facilities.value = [];
+    listErrorMessage.value =
+      (error as { data?: { error?: { message?: string } } }).data?.error?.message ??
+      '施設一覧の取得に失敗しました。';
+  }
 }
 
 async function submitFacility() {

@@ -1,12 +1,12 @@
 <template>
   <section class="hero">
     <div class="hero__copy">
-      <p class="hero__eyebrow">Phase 2 Authentication</p>
-      <h2 class="hero__title">FERMS Auth Foundation</h2>
+      <p class="hero__eyebrow">FERMS Demo Entry</p>
+      <h2 class="hero__title">FERMS Reservation Demo</h2>
       <p class="hero__description">
-        portal handover と FERMS ローカルセッションを前提に、Nuxt / NestJS /
-        PostgreSQL / Docker を接続した認証付きの共通基盤です。未認証時はここから
-        認証引き継ぎを開始し、認証済みであれば dashboard 骨組みへ進めます。
+        portal handover と FERMS ローカルセッションを前提に、利用者予約と管理運用を
+        通しで確認できるデモ入口です。未認証時はここから認証引き継ぎを開始し、
+        認証済みであれば dashboard から主要導線へ進めます。
       </p>
     </div>
 
@@ -46,11 +46,16 @@
     </div>
 
     <div class="card">
-      <h3 class="card__title">Next step</h3>
+      <h3 class="card__title">Demo routes</h3>
       <p class="card__description">
-        認証が完了すると、施設一覧、設備一覧、予約作成、予約一覧の利用者導線へ進めます。
+        認証後は dashboard から、施設確認、予約作成、自分の予約確認、管理運用の順で
+        デモを進められます。
       </p>
-      <NuxtLink class="card__link" to="/facilities">施設一覧へ進む</NuxtLink>
+      <div class="resource-card__actions">
+        <NuxtLink class="card__link" to="/dashboard">Dashboard</NuxtLink>
+        <NuxtLink class="card__link" to="/facilities">施設一覧</NuxtLink>
+        <NuxtLink class="card__link" to="/reservations">予約一覧</NuxtLink>
+      </div>
     </div>
   </section>
 </template>

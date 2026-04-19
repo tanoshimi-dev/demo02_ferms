@@ -8,7 +8,9 @@
 FERMS は、施設や設備の空き状況確認、予約作成、予約確認、予約キャンセルを提供するシステムです。  
 あわせて、管理者が施設・設備情報や予約状況を管理できる構成を目指します。
 
-現在は **仕様整理と開発計画の整備が完了した段階** で、実装は `sys` 配下にこれから追加していく前提です。
+現在は `sys` 配下に Nuxt frontend、NestJS backend、PostgreSQL、docker compose を揃えた
+MVP 実装があり、利用者導線、管理導線、認証引き継ぎ、デモ用シード、回帰確認までを
+段階的に確認できる状態です。
 
 ## 技術方針
 
@@ -61,14 +63,29 @@ demo02_ferms/
   sys/
 ```
 
-今後の `sys` 配下は次のような構成を想定しています。
+現在の `sys` 配下は次のような構成です。
 
 ```text
 sys/
-  frontend/        Nuxt アプリ
   backend/         NestJS API
-  db/              マイグレーション、初期 SQL、シード
+  db/              DB 補助ファイルとシード方針
+  frontend/        Nuxt アプリ
+  scripts/         smoke test などの補助スクリプト
+  docker-compose.yml
+  docker-compose.prod.yml
 ```
+
+## ローカル開発
+
+ローカル確認は `sys` 配下を起点に行います。
+
+```powershell
+Set-Location E:\dev\vs_code\products\tanoshimi.dev\sys\demo02_ferms\sys
+docker compose up --build -d
+npm run test:smoke
+```
+
+個別確認が必要な場合は backend / frontend 配下で build や test を実行します。
 
 ## ドキュメント
 
@@ -92,6 +109,7 @@ sys/
 5. デモ用データと導線を整える
 
 フェーズの詳細は `doc\dev-plan` 配下を参照してください。
+各フェーズの実装結果は `doc\dev-plan\result` 配下に記録しています。
 
 ## MVP 範囲
 

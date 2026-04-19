@@ -8,7 +8,18 @@
       </p>
     </div>
 
-    <div class="resource-grid">
+    <p v-if="error" class="form__error">
+      {{ error.statusMessage ?? '施設一覧の取得に失敗しました。' }}
+    </p>
+
+    <section v-else-if="facilities.length === 0" class="resource-card empty-state">
+      <h3 class="empty-state__title">表示できる施設がありません</h3>
+      <p class="empty-state__description">
+        管理者画面で施設が未登録か、まだ利用可能な施設が用意されていません。
+      </p>
+    </section>
+
+    <div v-else class="resource-grid">
       <NuxtLink
         v-for="facility in facilities"
         :key="facility.id"
@@ -32,7 +43,7 @@ await useAuthSession({
   required: true,
 });
 
-const { data } = await useFetch('/api/facilities');
+const { data, error } = await useFetch('/api/facilities');
 
 const facilities = computed(() => {
   const payload = data.value as

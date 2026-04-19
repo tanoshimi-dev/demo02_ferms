@@ -19,7 +19,9 @@
           </button>
         </div>
 
-        <ul class="list">
+        <p v-if="listErrorMessage" class="form__error">{{ listErrorMessage }}</p>
+
+        <ul v-if="equipments.length > 0" class="list">
           <li v-for="equipment in equipments" :key="equipment.id">
             <div>
               <strong>{{ equipment.name }}</strong>
@@ -32,6 +34,13 @@
             </button>
           </li>
         </ul>
+
+        <div v-else class="empty-state">
+          <h3 class="empty-state__title">設備はまだありません</h3>
+          <p class="empty-state__description">
+            先に施設を用意したうえで、最初の設備を登録してください。
+          </p>
+        </div>
       </section>
 
       <section class="resource-card">
@@ -104,6 +113,7 @@ type AdminEquipment = {
 const selectedEquipmentId = ref('');
 const facilities = ref<FacilityOption[]>([]);
 const equipments = ref<AdminEquipment[]>([]);
+const listErrorMessage = ref('');
 const message = ref('');
 const errorMessage = ref('');
 const form = reactive({
@@ -138,24 +148,40 @@ function selectEquipment(equipment: AdminEquipment) {
 }
 
 async function loadFacilities() {
-  const payload = (await $fetch('/api/admin/facilities')) as {
-    data: {
-      items: FacilityOption[];
+  try {
+    const payload = (await $fetch('/api/admin/facilities')) as {
+      data: {
+        items: FacilityOption[];
+      };
     };
-  };
-  facilities.value = payload.data.items;
-  if (!form.facilityId) {
-    form.facilityId = facilities.value[0]?.id ?? '';
+    facilities.value = payload.data.items;
+    if (!form.facilityId) {
+      form.facilityId = facilities.value[0]?.id ?? '';
+    }
+  } catch (error) {
+    facilities.value = [];
+    listErrorMessage.value =
+      (error as { data?: { error?: { message?: string } } }).data?.error?.message ??
+      '施設候補の取得に失敗しました。';
   }
 }
 
 async function loadEquipments() {
-  const payload = (await $fetch('/api/admin/equipments')) as {
-    data: {
-      items: AdminEquipment[];
+  listErrorMessage.value = '';
+
+  try {
+    const payload = (await $fetch('/api/admin/equipments')) as {
+      data: {
+        items: AdminEquipment[];
+      };
     };
-  };
-  equipments.value = payload.data.items;
+    equipments.value = payload.data.items;
+  } catch (error) {
+    equipments.value = [];
+    listErrorMessage.value =
+      (error as { data?: { error?: { message?: string } } }).data?.error?.message ??
+      '設備一覧の取得に失敗しました。';
+  }
 }
 
 async function submitEquipment() {

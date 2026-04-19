@@ -41,7 +41,14 @@
       </form>
     </section>
 
-    <div class="resource-grid">
+    <section v-if="reservations.length === 0" class="resource-card empty-state">
+      <h3 class="empty-state__title">条件に一致する予約はありません</h3>
+      <p class="empty-state__description">
+        フィルターを変えるか、利用者導線から新しい予約を作成して再検索してください。
+      </p>
+    </section>
+
+    <div v-else class="resource-grid">
       <article v-for="reservation in reservations" :key="reservation.id" class="resource-card">
         <p class="resource-card__meta">
           {{ reservation.facilityName }} / {{ reservation.equipmentName ?? '施設予約' }}
@@ -110,9 +117,11 @@ async function loadFacilities() {
   facilities.value = payload.data.items;
 }
 
-async function loadReservations() {
-  message.value = '';
-  errorMessage.value = '';
+async function loadReservations(options?: { preserveFeedback?: boolean }) {
+  if (!options?.preserveFeedback) {
+    message.value = '';
+    errorMessage.value = '';
+  }
 
   try {
     const payload = (await $fetch('/api/admin/reservations', {
@@ -131,6 +140,7 @@ async function loadReservations() {
     errorMessage.value =
       (error as { data?: { error?: { message?: string } } }).data?.error?.message ??
       '予約一覧の取得に失敗しました。';
+    reservations.value = [];
   }
 }
 
@@ -152,7 +162,9 @@ async function updateStatus(reservationId: string, event: Event) {
     errorMessage.value =
       (error as { data?: { error?: { message?: string } } }).data?.error?.message ??
       '予約状態の更新に失敗しました。';
-    await loadReservations();
+    await loadReservations({
+      preserveFeedback: true,
+    });
   }
 }
 

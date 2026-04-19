@@ -5,6 +5,7 @@
       <h2 class="resource-page__title">管理運用ダッシュボード</h2>
       <p class="resource-page__description">
         管理者ユーザー向けに、施設 / 設備 / 予約の運用導線をまとめています。
+        デモでは「施設確認 -> 設備確認 -> 予約検索」の順で辿ると全体像を把握しやすくなります。
       </p>
     </div>
 
