@@ -13,6 +13,7 @@
         <NuxtLink to="/equipments">Equipments</NuxtLink>
         <NuxtLink to="/reservations">Reservations</NuxtLink>
         <NuxtLink v-if="isAdmin" to="/admin">Admin</NuxtLink>
+        <a :href="config.public.portalPublicUrl" target="_blank" rel="noreferrer">Portal</a>
         <a :href="backendLinkUrl" target="_blank" rel="noreferrer">Backend</a>
         <a v-if="authState.authenticated" :href="logoutUrl">Logout</a>
         <a v-else :href="handoverUrl">Login</a>
