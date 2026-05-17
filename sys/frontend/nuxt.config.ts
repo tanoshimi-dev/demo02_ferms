@@ -16,6 +16,8 @@ export default defineNuxtConfig({
         process.env.NUXT_PUBLIC_BACKEND_PUBLIC_URL ?? 'http://localhost:8080',
       frontendPublicUrl:
         process.env.NUXT_PUBLIC_FRONTEND_PUBLIC_URL ?? 'http://localhost:3000',
+      portalPublicUrl:
+        process.env.NUXT_PUBLIC_PORTAL_PUBLIC_URL ?? 'https://tanoshimi.dev',
     },
   },
 })
